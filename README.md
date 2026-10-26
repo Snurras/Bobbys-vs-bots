@@ -4,7 +4,7 @@ A hidden-role party game for the dinner table, with no game master. Everyone pla
 
 Inspired by the TV show *The Traitors*.
 
-**Play the test build:** https://snurras.github.io/bobbys-vs-bots/
+**Play the test build:** https://snurras.github.io/Bobbys-vs-bots/
 
 > **Status: test build 0.1.** The full game runs in the browser as a solo test against simulated players. Online multiplayer comes with the Firebase version (see [Roadmap](#roadmap)).
 

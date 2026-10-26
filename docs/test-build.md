@@ -4,7 +4,7 @@ The test build is a single file, `index.html`, with no build step and no depende
 
 ## How to play test
 
-1. Open https://snurras.github.io/bobbys-vs-bots/ on a phone or laptop.
+1. Open https://snurras.github.io/Bobbys-vs-bots/ on a phone or laptop.
 2. Enter a nickname, choose how many simulated players to add (3 to 9), and tap **Start solo test**.
 3. In the lobby, pick the mode, night length and **Your role in this test** (Random, Bot or Bobby), tap **I'm ready**, then **Start game**.
 4. Play through the phases. **Show all roles (test only)** reveals everyone's role; **Quit test** goes back to the start.
