@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Bobby vs Bots</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one phone-width column per screen, a sticky status bar on top, big tap targets below. Adult = night circuitry, Kids = daylight toy box. */
+:root {
+  --bg: #15121d;
+  --surface: #211d2c;
+  --line: #3a3349;
+  --fg: #f1ecf7;
+  --muted: #a49bb6;
+  --bobby: #ffb15c;
+  --bot: #ff4d7d;
+  --ok: #5fd39a;
+  --target: #ff4d6d;
+  --ink-on-accent: #1a1120;
+  --display: "Bungee", "Arial Black", Impact, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+body[data-mode="kids"] {
+  --bg: #e9f4ff;
+  --surface: #ffffff;
+  --line: #c8dcef;
+  --fg: #1c2a45;
+  --muted: #5a6b88;
+  --bobby: #ff7a2f;
+  --bot: #2f7dff;
+  --ok: #18a05e;
+  --target: #e5484d;
+  --ink-on-accent: #ffffff;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  transition: background .4s ease;
+}
+body[data-mode="adult"] {
+  background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+#app { max-width: 460px; margin: 0 auto; padding-block: 20px 48px; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, .display { font-family: var(--display); font-weight: 400; letter-spacing: .01em; text-wrap: balance; margin: 0; }
+h1 { font-size: 2.4rem; line-height: 1; }
+h2 { font-size: 1.5rem; line-height: 1.1; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: .875rem; }
+.mono { font-family: var(--mono); }
+.label { font-size: .75rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+.logo { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.logo .vs { font-family: var(--mono); color: var(--muted); font-size: 1rem; }
+.logo .b1 { color: var(--bobby); }
+.logo .b2 { color: var(--bot); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+button, .btn {
+  font: inherit; font-weight: 700; cursor: pointer;
+  border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg);
+  padding: 14px 16px; min-height: 48px;
+}
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--bobby); outline-offset: 2px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.primary { background: var(--bobby); color: var(--ink-on-accent); border-color: transparent; }
+button.danger { background: var(--bot); color: #fff; border-color: transparent; }
+button.ghostbtn { background: transparent; }
+button.wide { width: 100%; }
+input, select {
+  font: inherit; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-height: 48px; width: 100%;
+}
+.code { font-family: var(--mono); font-weight: 700; font-size: 2rem; letter-spacing: .25em; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: env(safe-area-inset-top, 0px); background: var(--bg); padding-block: 8px; z-index: 5; }
+.timer { font-family: var(--mono); font-weight: 700; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: .8rem; font-weight: 700; border: 1px solid var(--line); }
+.pill.bot { background: color-mix(in srgb, var(--bot) 18%, transparent); border-color: var(--bot); }
+.pill.bobby { background: color-mix(in srgb, var(--bobby) 18%, transparent); border-color: var(--bobby); }
+.pill.ok { border-color: var(--ok); color: var(--ok); }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); min-height: 52px; }
+.item.dead { opacity: .45; text-decoration: line-through; }
+button.item { width: 100%; text-align: left; font-weight: 700; }
+button.item.sel { border-color: var(--bobby); box-shadow: inset 0 0 0 2px var(--bobby); }
+button.item.target { border-color: var(--target); box-shadow: inset 0 0 0 2px var(--target); background: color-mix(in srgb, var(--target) 14%, var(--surface)); }
+button.item.done { border-color: var(--ok); box-shadow: inset 0 0 0 2px var(--ok); background: color-mix(in srgb, var(--ok) 16%, var(--surface)); }
+button.item.locked { box-shadow: inset 0 0 0 2px var(--bot), 0 0 0 3px color-mix(in srgb, var(--bot) 35%, transparent); }
+.dots { display: inline-flex; gap: 4px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bot); display: inline-block; }
+.dot.me { box-shadow: 0 0 0 2px var(--fg); }
+.rolecard { text-align: center; padding: 28px 16px; gap: 14px; align-items: center; }
+.rolecard .big { font-family: var(--display); font-size: 3rem; line-height: 1; }
+.rolecard.bot .big { color: var(--bot); }
+.rolecard.bobby .big { color: var(--bobby); }
+.hero { text-align: center; padding: 32px 12px; gap: 12px; align-items: center; }
+.hero .big { font-family: var(--display); font-size: 2.2rem; line-height: 1.05; }
+.dead-screen { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); background: #000; color: #ff3b5c; }
+body[data-mode="kids"] .dead-screen { background: #2f7dff; color: #fff; }
+.dead-screen .big { font-family: var(--display); font-size: 2.6rem; line-height: 1.05; }
+body[data-mode="adult"] .dead-screen .big { animation: glitch 1.2s steps(2) infinite; }
+@keyframes glitch { 0%,100% { transform: none; text-shadow: none; } 50% { transform: translateX(2px); text-shadow: -3px 0 #00e5ff, 3px 0 #ff00a8; } }
+.podium { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: end; gap: 8px; text-align: center; }
+.podium .step { background: var(--surface); border: 1px solid var(--line); border-radius: 10px 10px 0 0; padding: 10px 6px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.podium .step b { overflow-wrap: anywhere; }
+.podium .p1 { height: 150px; border-color: var(--bobby); }
+.podium .p2 { height: 115px; }
+.podium .p3 { height: 90px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+td.num, th.num { text-align: right; }
+.notice { border-left: 4px solid var(--bobby); padding: 10px 12px; background: var(--surface); border-radius: 0 10px 10px 0; }
+.toggle { display: flex; gap: 6px; }
+.toggle button { flex: 1; min-height: 44px; padding: 10px; }
+.toggle button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.tally { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div id="app"></div>
+
+<script>
+/* ===== ENGINE (pure functions, no DOM) ===== */
+const RULES = { rolesSec: 10, morningSec: 8, banishSec: 8, voteSec: 60, minPlayers: 4 };
+const Engine = (() => {
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const botCount = n => Math.max(1, Math.floor(n / 4));
+  const living = g => g.order.filter(id => g.alive[id]);
+  const livingBy = (g, role) => living(g).filter(id => g.roles[id] === role);
+  const act = (P, id, g) => { const a = P[id] && P[id].act; return a && a.phaseId === g.phaseId ? a : null; };
+  const ghostOf = (P, id) => (P[id] && P[id].ghost) || {};
+  const go = (g, phase, sec, now) => { g.phase = phase; g.phaseId += 1; g.phaseEndsAt = sec ? now + sec * 1000 : 0; return g; };
+
+  function newGame(code, hostId) {
+    return { code, hostId, mode: 'adult', nightSec: 45, failDeath: true, taskNeed: 4,
+      phase: 'lobby', phaseId: 1, phaseEndsAt: 0, gameNo: 1, night: 0, vote: 0,
+      order: [], names: {}, roles: {}, alive: {}, deaths: [], event: null, winner: null,
+      credits: {}, ghostHits: {}, votes: {}, lastScores: {}, scores: {}, created: Date.now() };
+  }
+  const readyIds = (g, P) => Object.keys(P).filter(id => P[id] && P[id].nickname && P[id].ready === g.gameNo);
+  const hostReady = (g, P) => !!(P[g.hostId] && P[g.hostId].ready === g.gameNo);
+  const canStart = (g, P) => g.phase === 'lobby' && hostReady(g, P) && readyIds(g, P).length >= RULES.minPlayers;
+
+  function start(g0, P, now, rnd = Math.random) {
+    if (!canStart(g0, P)) return null;
+    const g = clone(g0);
+    const ids = readyIds(g, P);
+    for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+    const k = botCount(ids.length);
+    g.roles = {}; g.alive = {}; g.names = {};
+    ids.forEach((id, i) => { g.roles[id] = i < k ? 'bot' : 'bobby'; g.alive[id] = true; g.names[id] = P[id].nickname; });
+    // Solo test: the host can force their own role; swap with someone on the other side
+    const want = g.testRole, me = g.hostId;
+    if ((want === 'bot' || want === 'bobby') && g.roles[me] && g.roles[me] !== want) {
+      const other = ids.find(id => id !== me && g.roles[id] === want);
+      if (other) { g.roles[other] = g.roles[me]; g.roles[me] = want; }
+    }
+    g.order = ids.slice().sort((a, b) => g.names[a].localeCompare(g.names[b]));
+    Object.assign(g, { night: 0, vote: 0, deaths: [], event: null, winner: null, credits: {}, ghostHits: {}, votes: {}, lastScores: {} });
+    return go(g, 'roles', RULES.rolesSec, now);
+  }
+  const startNight = (g0, now) => { const g = clone(g0); g.night += 1; g.event = null; return go(g, 'night', g.nightSec, now); };
+  const startVote = (g0, now) => { const g = clone(g0); g.vote += 1; g.votes = {}; return go(g, 'vote', RULES.voteSec, now); };
+
+  function kill(g, id, cause) { g.alive[id] = false; g.deaths.push({ id, cause, night: g.night, vote: g.vote }); }
+  function winnerOf(g) {
+    if (livingBy(g, 'bot').length === 0) return 'bobbies';
+    if (livingBy(g, 'bobby').length === 0) return 'bots';
+    return null;
+  }
+  function resolveNight(g, P) {
+    const bots = livingBy(g, 'bot');
+    const picks = bots.map(id => (act(P, id, g) || {}).pick);
+    let victim = null;
+    if (picks.length && picks.every(p => p && p === picks[0]) && g.alive[picks[0]] && g.roles[picks[0]] === 'bobby') victim = picks[0];
+    const failed = [];
+    if (g.failDeath) {
+      livingBy(g, 'bobby').forEach(id => {
+        if (id === victim) return;
+        const a = act(P, id, g);
+        if (!a || (a.hits || 0) < taskNeedFor(id + ':' + g.night, g.nightSec)) failed.push(id);
+      });
+    }
+    // Ghost calls for this night, made by players who were already ghosts
+    if (victim) Object.keys(g.names).forEach(id => {
+      if (g.alive[id]) return;
+      if (ghostOf(P, id).callNight && ghostOf(P, id).callNight[g.night] === victim) g.ghostHits[id] = (g.ghostHits[id] || 0) + 1;
+    });
+    if (victim) kill(g, victim, 'eliminated');
+    failed.forEach(id => kill(g, id, 'failed'));
+    g.event = { type: 'morning', victim, failed, night: g.night };
+  }
+  function resolveVote(g, P) {
+    const voters = living(g);
+    const votes = {};
+    voters.forEach(id => { const a = act(P, id, g); if (a && a.vote && g.alive[a.vote] && a.vote !== id) votes[id] = a.vote; });
+    const count = {};
+    Object.values(votes).forEach(t => { count[t] = (count[t] || 0) + 1; });
+    const max = Math.max(0, ...Object.values(count));
+    const top = Object.keys(count).filter(t => count[t] === max);
+    let banished = null;
+    if (max > 0 && top.length === 1) banished = top[0];
+    if (banished) {
+      if (g.roles[banished] === 'bot') Object.keys(votes).forEach(v => { if (votes[v] === banished && g.roles[v] === 'bobby') g.credits[v] = (g.credits[v] || 0) + 1; });
+      Object.keys(g.names).forEach(id => {
+        if (g.alive[id]) return;
+        if (ghostOf(P, id).callVote && ghostOf(P, id).callVote[g.vote] === banished) g.ghostHits[id] = (g.ghostHits[id] || 0) + 1;
+      });
+      kill(g, banished, 'banished');
+    }
+    g.votes = votes;
+    g.event = { type: 'banish', banished, role: banished ? g.roles[banished] : null, tie: max > 0 && top.length > 1, count };
+  }
+  function score(g, P) {
+    const out = {};
+    const deathOf = id => g.deaths.find(d => d.id === id);
+    g.order.forEach(id => {
+      const role = g.roles[id], won = (g.winner === 'bots') === (role === 'bot');
+      const parts = [];
+      if (won) parts.push(['Team win', 3]);
+      if (won && g.alive[id]) parts.push(['Survived', 1]);
+      if (role === 'bot' && !g.deaths.some(d => d.id === id && d.cause === 'banished')) parts.push(['Never caught', 2]);
+      if (g.credits[id]) parts.push(['Voted out a Bot', g.credits[id]]);
+      const d = deathOf(id);
+      if (d) {
+        const gh = ghostOf(P, id);
+        if (gh.side && gh.side === g.winner) parts.push(['Ghost backed the winner', gh.sideAt === d.night ? 2 : 1]);
+        const unmasked = (gh.unmask || []).filter(x => g.roles[x] === 'bot').length;
+        if (unmasked) parts.push(['Ghost unmasked Bots', unmasked]);
+        if (g.ghostHits[id]) parts.push(['Ghost called it', g.ghostHits[id]]);
+      }
+      out[id] = { total: parts.reduce((s, p) => s + p[1], 0), parts };
+    });
+    return out;
+  }
+  function finish(g, P, now) {
+    g.lastScores = score(g, P);
+    const s = g.scores;
+    g.order.forEach(id => {
+      const prev = s[id] || { name: g.names[id], total: 0, games: 0 };
+      s[id] = { name: g.names[id], total: prev.total + g.lastScores[id].total, games: prev.games + 1, last: g.lastScores[id].total };
+    });
+    return go(g, 'over', 0, now);
+  }
+  function advance(g0, P, now) {
+    if (!g0) return null;
+    const ends = g0.phaseEndsAt && now >= g0.phaseEndsAt;
+    if (g0.phase === 'roles' && ends) return go(clone(g0), 'discussion', 0, now);
+    if (g0.phase === 'night' && ends) { const g = clone(g0); resolveNight(g, P); return go(g, 'morning', RULES.morningSec, now); }
+    if (g0.phase === 'morning' && ends) { const g = clone(g0); g.winner = winnerOf(g); return g.winner ? finish(g, P, now) : go(g, 'discussion', 0, now); }
+    if (g0.phase === 'vote') {
+      const all = living(g0).every(id => { const a = act(P, id, g0); return a && a.vote; });
+      if (all || ends) { const g = clone(g0); resolveVote(g, P); return go(g, 'banish', RULES.banishSec, now); }
+    }
+    if (g0.phase === 'banish' && ends) { const g = clone(g0); g.winner = winnerOf(g); if (g.winner) return finish(g, P, now); g.night += 1; g.event = null; return go(g, 'night', g.nightSec, now); }
+    return null;
+  }
+  function nextGame(g0, now) {
+    const g = clone(g0); g.gameNo += 1;
+    Object.assign(g, { order: [], roles: {}, alive: {}, deaths: [], event: null, winner: null, night: 0, vote: 0, votes: {}, credits: {}, ghostHits: {}, lastScores: {} });
+    return go(g, 'lobby', 0, now);
+  }
+  const endDinner = (g0, now) => go(clone(g0), 'podium', 0, now);
+  // Decoy marker: deterministic per player, night and time slot
+  function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  const markerIndex = (seed, slot, n) => n ? hash(seed + ':' + slot) % n : -1;
+  // Each marker stop lasts a random 3-10 s, the same on the player's phone and in the host's check
+  function decoyStops(seed, nightSec) { const out = []; let t = 0, i = 0; while (t < nightSec * 1000) { out.push(t); t += 3000 + hash(seed + '#' + i) % 7001; i++; } return out; }
+  function slotAt(seed, nightSec, elapsedMs) { const st = decoyStops(seed, nightSec); let k = 0; st.forEach((t, i) => { if (elapsedMs >= t) k = i; }); return k; }
+  const taskNeedFor = (seed, nightSec) => Math.max(1, Math.ceil(decoyStops(seed, nightSec).length * 0.6));
+  return { newGame, canStart, readyIds, start, startNight, startVote, advance, nextGame, endDinner, living, livingBy, act, botCount, markerIndex, slotAt, taskNeedFor, hostReady, score };
+})();
+/* ===== END ENGINE ===== */
+</script>
+
+<script>
+/* ===== STORES ===== */
+const clean = s => String(s).replace(/[^A-Za-z0-9_\-~:@+]/g, '_').slice(0, 120) || 'x';
+class LocalStore {
+  constructor() { this.game = null; this.players = {}; this.subs = []; this.local = true; }
+  watch(cb) { this.subs.push(cb); cb(this.snap()); }
+  snap() { return { game: this.game, players: this.players }; }
+  emit() { const s = this.snap(); this.subs.forEach(f => f(s)); }
+  async setGame(g) { this.game = g; setTimeout(() => this.emit(), 0); }
+  async setPlayer(id, doc) { this.players = { ...this.players, [id]: doc }; setTimeout(() => this.emit(), 0); }
+  stop() { this.subs = []; }
+}
+class DbStore {
+  constructor(db, code) {
+    this.db = db; this.code = code; this.game = undefined; this.players = {}; this.subs = []; this.pending = {}; this.chains = {};
+    this.u1 = db.doc(`games/${code}`).onSnapshot(s => { this.game = s.exists ? s.data() : null; this.emit(); }, e => this.fail(e));
+    this.u2 = db.collection(`games/${code}/players`).onSnapshot(q => { const p = {}; q.docs.forEach(d => { p[d.id] = d.data(); }); this.players = p; this.emit(); }, e => this.fail(e));
+  }
+  watch(cb) { this.subs.push(cb); if (this.game !== undefined) cb(this.snap()); }
+  snap() { return { game: this.game, players: this.players }; }
+  emit() { if (this.game === undefined) return; const s = this.snap(); this.subs.forEach(f => f(s)); }
+  fail(e) { App.flash(e && e.code === 'revoked' ? 'Your access to this game ended.' : 'Lost the live connection. Reload the page to rejoin.'); }
+  write(path, data) {
+    this.pending[path] = data;
+    if (this.chains[path]) return this.chains[path];
+    this.chains[path] = (async () => {
+      while (this.pending[path]) {
+        const d = this.pending[path]; this.pending[path] = null;
+        try { await this.db.doc(path).set(d); }
+        catch (e) {
+          if (e && e.code === 'invalid_argument') App.flash('You can view this game but not play: ask the owner to share it with you as an Editor.');
+          else if (e && e.code === 'unavailable') { await new Promise(r => setTimeout(r, 400 + Math.random() * 600)); if (!this.pending[path]) this.pending[path] = d; }
+          else App.flash('Could not save: ' + ((e && e.message) || 'unknown error'));
+        }
+      }
+      this.chains[path] = null;
+    })();
+    return this.chains[path];
+  }
+  setGame(g) { return this.write(`games/${this.code}`, g); }
+  setPlayer(id, doc) { return this.write(`games/${this.code}/players/${id}`, doc); }
+  stop() { try { this.u1(); this.u2(); } catch (e) {} this.subs = []; }
+}
+
+/* ===== WORDS PER MODE ===== */
+const WORDS = {
+  adult: {
+    bot: 'Bot', bots: 'Bots', bobby: 'Bobby', bobbies: 'Bobbies',
+    botBlurb: 'You are a rogue machine hiding among the humans. Each night, agree with the other Bots on one Bobby to terminate.',
+    bobbyBlurb: 'You are human. Find the Bots and vote them out before they take over.',
+    nightTitle: 'Night falls', nightBot: 'Tap a name to target it. When every Bot taps the same name, it locks.',
+    nightBobby: 'Keep the signal: tap the name with the marker before it moves.',
+    deadTitle: 'You have been deleted', deadSub: 'Stay quiet. You are a Ghost now: keep playing the side game.',
+    victim: n => `${n} was found terminated`, failed: n => `${n} suffered a system failure`, noVictim: 'Nobody was terminated tonight.',
+    wasBot: n => `${n} was a Bot`, wasBobby: n => `${n} was a Bobby`,
+    botsWin: 'The Bots took over', bobbiesWin: 'Humanity survives',
+  },
+  kids: {
+    bot: 'Bot', bots: 'Bots', bobby: 'Bobby', bobbies: 'Bobbies',
+    botBlurb: 'You are a sneaky robot! Each night, team up with the other Bots to unplug one Bobby.',
+    bobbyBlurb: 'You are a human! Spot the robots and vote them out.',
+    nightTitle: 'Bedtime in the village', nightBot: 'Tap a name. When all Bots tap the same name, it locks.',
+    nightBobby: 'Catch the blinking dot: tap the name it sits on before it jumps.',
+    deadTitle: "You've been unplugged!", deadSub: 'Shh, no clues! You are a Ghost now: play the guessing game.',
+    victim: n => `${n} ran out of battery`, failed: n => `${n} tripped over a cable`, noVictim: 'Everyone woke up with full batteries.',
+    wasBot: n => `${n} was a Bot!`, wasBobby: n => `${n} was a Bobby!`,
+    botsWin: 'The robots win!', bobbiesWin: 'The Bobbies win!',
+  },
+};
+
+/* ===== SOUND ===== */
+const Sound = (() => {
+  let ctx = null;
+  const unlock = () => { try { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); } catch (e) {} };
+  function tone(type, f0, f1, dur, gain, t0 = 0) {
+    if (!ctx) return;
+    const t = ctx.currentTime + t0, o = ctx.createOscillator(), gn = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(gain, t + 0.05); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(gn).connect(ctx.destination); o.start(t); o.stop(t + dur + 0.05);
+  }
+  return {
+    unlock,
+    death(mode) {
+      unlock();
+      if (mode === 'kids') { tone('sine', 660, 330, .35, .25); tone('sine', 440, 110, .8, .25, .3); return; }
+      tone('sawtooth', 220, 40, 2.6, .18); tone('sawtooth', 227, 37, 2.6, .12); tone('square', 880, 55, 1.4, .05, .2);
+      try { navigator.vibrate && navigator.vibrate([300, 100, 600]); } catch (e) {}
+    },
+    tap() { if (ctx) tone('triangle', 520, 480, .06, .05); try { navigator.vibrate && navigator.vibrate(15); } catch (e) {} },
+    chime() { if (ctx) { tone('sine', 523, 523, .25, .12); tone('sine', 784, 784, .35, .1, .15); } },
+  };
+})();
+
+/* ===== SIMULATED PLAYERS (solo test) ===== */
+const SIM_NAMES = ['Ada', 'Bruno', 'Cleo', 'Dex', 'Elin', 'Farah', 'Gus', 'Hana', 'Ivo'];
+function simTick(store, g, P, now) {
+  if (!g) return;
+  Object.keys(P).filter(id => P[id].sim).forEach(id => {
+    const p = P[id], role = g.roles[id], alive = g.alive[id];
+    let next = null;
+    const rnd = Engine.markerIndex(id, g.phaseId, 1000) / 1000; // stable per phase
+    if (g.phase === 'lobby' && p.ready !== g.gameNo) next = { ...p, ready: g.gameNo };
+    if (!alive || !g.order.includes(id)) {
+      if (g.phase !== 'lobby' && g.order.includes(id) && !(p.ghost && p.ghost.side)) next = { ...p, ghost: { side: rnd < .5 ? 'bots' : 'bobbies', sideAt: g.night, unmask: [], callVote: {}, callNight: {} } };
+      if (next) store.setPlayer(id, next);
+      return;
+    }
+    const a = p.act && p.act.phaseId === g.phaseId ? p.act : null;
+    const elapsed = now - (g.phaseEndsAt - g.nightSec * 1000);
+    if (g.phase === 'night' && elapsed > 4000 + rnd * 6000) {
+      if (role === 'bot') {
+        const humanBot = Object.keys(P).find(x => !P[x].sim && g.roles[x] === 'bot' && g.alive[x]);
+        const hp = humanBot && P[humanBot].act && P[humanBot].act.phaseId === g.phaseId ? P[humanBot].act.pick : null;
+        const targets = Engine.livingBy(g, 'bobby');
+        const pick = hp || targets[Engine.markerIndex('night' + g.night, 0, targets.length)];
+        if (!a || a.pick !== pick) next = { ...p, act: { phaseId: g.phaseId, pick } };
+      } else if (!a) next = { ...p, act: { phaseId: g.phaseId, hits: Engine.taskNeedFor(id + ':' + g.night, g.nightSec) } };
+    }
+    if (g.phase === 'vote' && !a && now > g.phaseEndsAt - (RULES.voteSec - 3 - rnd * 8) * 1000) {
+      const others = Engine.living(g).filter(x => x !== id && (role !== 'bot' || g.roles[x] !== 'bot'));
+      next = { ...p, act: { phaseId: g.phaseId, vote: others[Engine.markerIndex(id + g.vote, 1, others.length)] } };
+    }
+    if (next) store.setPlayer(id, next);
+  });
+}
+
+/* ===== APP ===== */
+const App = (() => {
+  const S = {
+    screen: 'home', db: null, user: null, myId: null, store: null, game: null, players: {}, me: null,
+    nick: '', joinCode: '', simCount: 5, peek: false, flash: '', deadShownFor: null, deadOverlay: false,
+    hits: {}, slotSeen: -1, busy: false, lastWritten: 0, confirmEnd: false,
+  };
+  const $app = document.getElementById('app');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+  S.nick = store.get('bvb-nick') || '';
+  const W = () => WORDS[(S.game && S.game.mode) || 'adult'];
+  const amHost = () => S.game && S.game.hostId === S.myId;
+  const name = id => (S.game && S.game.names[id]) || (S.players[id] && S.players[id].nickname) || '?';
+  const myRole = () => S.game && S.game.roles[S.myId];
+  const inGame = () => S.game && S.game.order.includes(S.myId);
+  const alive = () => S.game && S.game.alive[S.myId];
+  const myAct = () => { const a = S.me && S.me.act; return a && S.game && a.phaseId === S.game.phaseId ? a : null; };
+  const secsLeft = () => S.game && S.game.phaseEndsAt ? Math.max(0, Math.ceil((S.game.phaseEndsAt - Date.now()) / 1000)) : null;
+
+  function flash(msg) { S.flash = msg; render(); }
+  function saveMe(patch) {
+    S.me = { ...(S.me || {}), ...patch };
+    S.store && S.store.setPlayer(S.myId, S.me);
+    render();
+  }
+  function hostWrite(g) { if (!g) return; S.lastWritten = g.phaseId; S.busy = true; Promise.resolve(S.store.setGame(g)).finally(() => { S.busy = false; }); }
+
+  // ---- lifecycle ----
+  async function boot() {
+    render();
+    try {
+      if (window.claude && window.claude.use) {
+        const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+        S.db = db; S.user = user;
+        if (user) { try { const raw = await user.id(); if (raw) S.myId = S.onlineId = clean(raw); } catch (e) {} }
+        const last = store.get('bvb-code');
+        if (S.db && S.myId && last) S.joinCode = last;
+      }
+    } catch (e) {}
+    render();
+  }
+  function attach(st, id) {
+    if (S.store) S.store.stop();
+    S.store = st; S.myId = id;
+    st.watch(({ game, players }) => {
+      S.game = game; S.players = players;
+      const serverMe = players[id];
+      if (serverMe && (!S.me || S.me.ghost === undefined)) S.me = { ...serverMe, ...(S.me || {}) };
+      onState();
+    });
+  }
+  function onState() {
+    const g = S.game;
+    if (!g) { if (S.screen === 'game') { S.screen = 'home'; flash('That game no longer exists.'); } return; }
+    document.body.dataset.mode = g.mode;
+    // Death overlay for the victim on morning
+    if (g.phase === 'morning' && g.event && g.event.night && S.deadShownFor !== g.night) {
+      const ev = g.event, me = S.myId;
+      if (ev.victim === me || (ev.failed || []).includes(me)) { S.deadShownFor = g.night; S.deadOverlay = true; Sound.death(g.mode); }
+    }
+    if (g.phase === 'banish' && g.event && g.event.banished === S.myId && S.deadShownFor !== 'v' + g.vote) { S.deadShownFor = 'v' + g.vote; Sound.chime(); }
+    if (g.phase === 'lobby') S.deadOverlay = false;
+    render();
+  }
+  setInterval(() => {
+    const g = S.game; if (!g || !S.store) return;
+    const now = Date.now();
+    if (amHost() && !S.busy && g.phaseId >= S.lastWritten) hostWrite(Engine.advance(g, S.players, now));
+    if (S.store.local) simTick(S.store, g, S.players, now);
+    const t = document.querySelector('[data-timer]'); const s = secsLeft();
+    if (t && s != null) t.textContent = `0:${String(s).padStart(2, '0')}`.replace(/^0:(\d\d\d)/, '$1');
+    if (g.phase === 'night' && alive() && myRole() === 'bobby') {
+      const slot = Engine.slotAt(S.myId + ':' + g.night, g.nightSec, now - (g.phaseEndsAt - g.nightSec * 1000));
+      if (slot !== S.slotSeen) { S.slotSeen = slot; render(); }
+    }
+  }, 250);
+
+  // ---- actions ----
+  const actions = {
+    nick: v => { S.nick = v.slice(0, 16); store.set('bvb-nick', S.nick); },
+    code: v => { S.joinCode = v.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4); },
+    async host() {
+      if (!S.nick.trim()) return flash('Pick a nickname first.');
+      if (!S.db || !S.myId) return flash('Online games need you signed in to Claude with access to this page. Try the solo test instead.');
+      const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let code = '';
+      for (let i = 0; i < 4; i++) code += letters[Math.floor(Math.random() * letters.length)];
+      const st = new DbStore(S.db, code);
+      S.me = { nickname: S.nick.trim(), ready: 0, joinedAt: Date.now() };
+      attach(st, S.myId); await st.setGame(Engine.newGame(code, S.myId)); await st.setPlayer(S.myId, S.me);
+      store.set('bvb-code', code); S.screen = 'game'; S.flash = ''; render();
+    },
+    async join() {
+      if (!S.nick.trim()) return flash('Pick a nickname first.');
+      if (!S.db || !S.myId) return flash('Online games need you signed in to Claude with access to this page.');
+      if (S.joinCode.length !== 4) return flash('Game codes have 4 letters.');
+      const snap = await S.db.doc(`games/${S.joinCode}`).get().catch(() => null);
+      if (!snap || !snap.exists) return flash(`No game with code ${S.joinCode}. Check the host's screen.`);
+      const st = new DbStore(S.db, S.joinCode);
+      const mine = await S.db.doc(`games/${S.joinCode}/players/${S.myId}`).get().catch(() => null);
+      S.me = mine && mine.exists ? { ...mine.data(), nickname: S.nick.trim() } : { nickname: S.nick.trim(), ready: 0, joinedAt: Date.now() };
+      attach(st, S.myId); await st.setPlayer(S.myId, S.me);
+      store.set('bvb-code', S.joinCode); S.screen = 'game'; S.flash = ''; render();
+    },
+    solo() {
+      if (!S.nick.trim()) return flash('Pick a nickname first.');
+      Sound.unlock();
+      const st = new LocalStore();
+      st.game = Engine.newGame('TEST', 'me');
+      st.players = { me: { nickname: S.nick.trim(), ready: 0 } };
+      SIM_NAMES.slice(0, S.simCount).forEach((n, i) => { st.players['sim' + i] = { nickname: n, ready: 0, sim: true }; });
+      S.me = { ...st.players.me }; S.peek = false;
+      attach(st, 'me'); S.screen = 'game'; S.flash = ''; render();
+    },
+    sims: v => { S.simCount = Math.max(3, Math.min(9, +v || 5)); render(); },
+    leave() { if (S.store) S.store.stop(); S.store = null; S.game = null; S.me = null; S.myId = S.onlineId || null; S.slotSeen = -1; S.deadOverlay = false; S.deadShownFor = null; S.screen = 'home'; document.body.dataset.mode = 'adult'; store.set('bvb-code', ''); render(); },
+    ready() { Sound.unlock(); saveMe({ ready: (S.me && S.me.ready === S.game.gameNo) ? 0 : S.game.gameNo }); },
+    setMode(m) { if (amHost()) hostWrite({ ...S.game, mode: m }); },
+    setNight(v) { if (amHost()) hostWrite({ ...S.game, nightSec: +v }); },
+    setTestRole(v) { if (amHost()) hostWrite({ ...S.game, testRole: v }); },
+    setFail(v) { if (amHost()) hostWrite({ ...S.game, failDeath: v === 'on' }); },
+    start() { Sound.unlock(); if (amHost()) hostWrite(Engine.start(S.game, S.players, Date.now())); },
+    night() { if (amHost()) hostWrite(Engine.startNight(S.game, Date.now())); },
+    vote() { if (amHost()) hostWrite(Engine.startVote(S.game, Date.now())); },
+    nextGame() { if (amHost()) hostWrite(Engine.nextGame(S.game, Date.now())); },
+    endDinner() { if (!S.confirmEnd) { S.confirmEnd = true; render(); return; } S.confirmEnd = false; if (amHost()) hostWrite(Engine.endDinner(S.game, Date.now())); },
+    cancelEnd() { S.confirmEnd = false; render(); },
+    peek() { S.peek = !S.peek; render(); },
+    closeDead() { S.deadOverlay = false; render(); },
+    pick(id) { Sound.tap(); saveMe({ act: { phaseId: S.game.phaseId, pick: id } }); },
+    decoy(idx) {
+      const g = S.game, slot = S.slotSeen, a = myAct() || { phaseId: g.phaseId, hits: 0, misses: 0 };
+      const key = g.phaseId + ':' + slot;
+      const targets = nightList();
+      const m = Engine.markerIndex(S.myId + ':' + g.night, slot, targets.length);
+      Sound.tap();
+      if (+idx === m && !S.hits[key]) { S.hits[key] = true; saveMe({ act: { ...a, phaseId: g.phaseId, hits: (a.hits || 0) + 1 } }); }
+      else if (+idx !== m) saveMe({ act: { ...a, phaseId: g.phaseId, misses: (a.misses || 0) + 1 } });
+    },
+    castVote(id) { Sound.tap(); saveMe({ act: { phaseId: S.game.phaseId, vote: id } }); },
+    gSide(side) { saveMe({ ghost: { ...ghost(), side, sideAt: S.game.night } }); },
+    gUnmask(id) { const g = ghost(), u = new Set(g.unmask || []); u.has(id) ? u.delete(id) : u.add(id); saveMe({ ghost: { ...g, unmask: [...u] } }); },
+    gCallNight(id) { const g = ghost(), n = nextNight(); saveMe({ ghost: { ...g, callNight: { ...(g.callNight || {}), [n]: id } } }); },
+    gCallVote(id) { const g = ghost(), n = nextVote(); saveMe({ ghost: { ...g, callVote: { ...(g.callVote || {}), [n]: id } } }); },
+    dismiss() { S.flash = ''; render(); },
+  };
+  const ghost = () => (S.me && S.me.ghost) || { unmask: [], callVote: {}, callNight: {} };
+  const nextNight = () => S.game.phase === 'night' ? S.game.night : S.game.night + 1;
+  const nextVote = () => S.game.phase === 'vote' ? S.game.vote : S.game.vote + 1;
+  // Each phone gets its own name order per night, so hand position at the table gives nothing away
+  const nightList = () => { const seed = S.myId + ':' + S.game.night; return Engine.living(S.game).filter(id => id !== S.myId).sort((x, y) => Engine.markerIndex(seed, x, 1e9) - Engine.markerIndex(seed, y, 1e9)); };
+
+  // Game taps fire on pointerdown so a live re-render between press and release can't swallow them
+  const FAST = new Set(['pick', 'decoy', 'castVote']);
+  document.addEventListener('pointerdown', e => {
+    const b = e.target.closest('[data-a]'); if (!b || b.disabled || !FAST.has(b.dataset.a)) return;
+    Sound.unlock(); e.preventDefault(); actions[b.dataset.a](b.dataset.v);
+  });
+  document.addEventListener('click', e => {
+    Sound.unlock();
+    const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
+    if (FAST.has(b.dataset.a) && e.detail !== 0) return; // already handled on pointerdown; keyboard clicks (detail 0) still work
+    const fn = actions[b.dataset.a]; if (fn) fn(b.dataset.v);
+  });
+  document.addEventListener('input', e => { const fn = e.target.dataset && actions[e.target.dataset.in]; if (fn) fn(e.target.value); });
+  document.addEventListener('change', e => { const fn = e.target.dataset && actions[e.target.dataset.ch]; if (fn) fn(e.target.value); });
+
+  // ---- views ----
+  const logo = (size = '') => `<div class="logo"><h1 class="${size}"><span class="b1">Bobby</span> <span class="vs">vs</span> <span class="b2">Bots</span></h1></div>`;
+  const flashBox = () => S.flash ? `<div class="notice row" role="status"><span style="flex:1;min-width:0">${esc(S.flash)}</span><button class="ghostbtn" data-a="dismiss" aria-label="Dismiss">OK</button></div>` : '';
+  const pillRole = id => { const r = S.game.roles[id]; return r ? `<span class="pill ${r}">${r === 'bot' ? W().bot : W().bobby}</span>` : ''; };
+  const showRolesTo = id => S.peek || S.game.phase === 'over' || S.game.phase === 'podium' || (myRole() === 'bot' && alive() && S.game.roles[id] === 'bot') || S.game.deaths.some(d => d.id === id && d.cause === 'banished');
+
+  function viewHome() {
+    const online = !!(S.db && S.myId);
+    return `${logo()}
+    <p class="muted">The hidden-role dinner game with no game master. Some of you are secretly Bots. The rest are Bobbies.</p>
+    ${flashBox()}
+    <div class="card">
+      <label class="label" for="nick">Your nickname</label>
+      <input id="nick" data-in="nick" value="${esc(S.nick)}" maxlength="16" autocomplete="nickname" placeholder="e.g. Gustav">
+    </div>
+    <div class="card">
+      <span class="label">Play together</span>
+      ${online ? `<button class="primary wide" data-a="host">Host a new game</button>
+      <div class="row"><input id="joincode" data-in="code" value="${esc(S.joinCode)}" placeholder="CODE" aria-label="Game code" style="flex:1;min-width:0;text-transform:uppercase;font-family:var(--mono);letter-spacing:.2em"><button data-a="join">Join</button></div>`
+      : window.claude ? `<p class="small muted">Online play needs everyone signed in to Claude with editing access to this page. You can still try the full game alone below.</p>`
+      : `<p class="small muted">This is a test build: online play arrives with the Firebase version. You can try the full game alone below.</p>`}
+    </div>
+    <div class="card">
+      <span class="label">Solo test</span>
+      <p class="small muted">Play a whole game on this device against simulated players. Good for trying the rules and screens.</p>
+      <div class="row"><label for="sims" class="small" style="flex:1">Simulated players</label>
+        <select id="sims" data-ch="sims" style="width:auto">${[3,4,5,6,7,8,9].map(n => `<option ${n === S.simCount ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+      <button class="wide" data-a="solo">Start solo test</button>
+    </div>`;
+  }
+
+  function topBar(label) {
+    const s = secsLeft();
+    return `<div class="bar"><div class="stack" style="gap:2px"><span class="label">${esc(label)}</span>
+      <span class="small muted">Game ${S.game.gameNo}${S.game.code !== 'TEST' ? ` · code <b class="mono">${esc(S.game.code)}</b>` : ' · solo test'}</span></div>
+      ${s != null ? `<span class="timer" data-timer>0:${String(s).padStart(2, '0')}</span>` : ''}</div>`;
+  }
+
+  function viewLobby() {
+    const g = S.game, ids = Object.keys(S.players).filter(id => S.players[id].nickname);
+    const ready = Engine.readyIds(g, S.players), meReady = S.me && S.me.ready === g.gameNo;
+    const need = Math.max(0, RULES.minPlayers - ready.length);
+    return `${logo()}${topBar('Lobby')}${flashBox()}
+    ${g.code !== 'TEST' ? `<div class="card" style="align-items:center;text-align:center"><span class="label">Join with code</span><span class="code">${esc(g.code)}</span><span class="small muted">Open this page on your phone and tap Join.</span></div>` : ''}
+    <div class="card"><div class="row" style="justify-content:space-between"><span class="label">Players (${ids.length})</span><span class="small muted">${ready.length} ready</span></div>
+      <div class="list">${ids.map(id => `<div class="item"><span>${esc(S.players[id].nickname)}${id === S.myId ? ' <span class="muted small">(you)</span>' : ''}${g.hostId === id ? ' <span class="pill">host</span>' : ''}</span>
+        ${S.players[id].ready === g.gameNo ? '<span class="pill ok">Ready</span>' : '<span class="small muted">waiting</span>'}</div>`).join('')}</div></div>
+    <button class="${meReady ? '' : 'primary'} wide" data-a="ready">${meReady ? 'Not ready' : "I'm ready"}</button>
+    ${amHost() ? `<div class="card"><span class="label">Host settings</span>
+      <div class="toggle" role="group" aria-label="Mode"><button data-a="setMode" data-v="adult" aria-pressed="${g.mode === 'adult'}">Adult</button><button data-a="setMode" data-v="kids" aria-pressed="${g.mode === 'kids'}">Kids</button></div>
+      <div class="row"><label for="nightsec" class="small" style="flex:1">Night length</label><select id="nightsec" data-ch="setNight" style="width:auto">${[15,30,45,60].map(n => `<option value="${n}" ${n === g.nightSec ? 'selected' : ''}>${n} s</option>`).join('')}</select></div>
+      <div class="row"><label for="fail" class="small" style="flex:1">Failing the night task eliminates you</label><select id="fail" data-ch="setFail" style="width:auto"><option value="on" ${g.failDeath ? 'selected' : ''}>On</option><option value="off" ${!g.failDeath ? 'selected' : ''}>Off</option></select></div>
+      ${S.store && S.store.local ? `<span class="small">Your role in this test</span><div class="toggle" role="group" aria-label="Your role">${[['random','Random'],['bot','Bot'],['bobby','Bobby']].map(([v, l]) => `<button data-a="setTestRole" data-v="${v}" aria-pressed="${(g.testRole || 'random') === v}">${l}</button>`).join('')}</div>` : ''}
+      <button class="primary wide" data-a="start" ${Engine.canStart(g, S.players) ? '' : 'disabled'}>Start game</button>
+      <p class="small muted">${!Engine.hostReady(g, S.players) ? "Tap I'm ready first, then start." : need ? `Need ${need} more ready player${need > 1 ? 's' : ''} (minimum ${RULES.minPlayers}).` : `Starts with ${ready.length} players: ${Engine.botCount(ready.length)} Bot${Engine.botCount(ready.length) > 1 ? 's' : ''}. Players who aren't ready sit this game out.`}</p></div>`
+      : `<p class="small muted center">Waiting for the host to start.</p>`}
+    ${sessionTable()}
+    <button class="ghostbtn" data-a="leave">Leave</button>`;
+  }
+
+  function viewRoles() {
+    const r = myRole();
+    if (!r) return spectator();
+    const allies = r === 'bot' ? Engine.livingBy(S.game, 'bot').filter(id => id !== S.myId) : [];
+    return `${topBar('Your secret role')}
+    <div class="card rolecard ${r}"><span class="label">Keep it hidden</span><span class="big">${r === 'bot' ? W().bot : W().bobby}</span>
+      <p>${r === 'bot' ? W().botBlurb : W().bobbyBlurb}</p>
+      ${allies.length ? `<p class="small">Your fellow Bots: <b>${allies.map(id => esc(name(id))).join(', ')}</b></p>` : r === 'bot' ? '<p class="small">You are the only Bot.</p>' : ''}</div>
+    <p class="small muted">Discussion starts when the timer runs out.</p>`;
+  }
+
+  function peopleList(extra) {
+    const g = S.game;
+    return `<div class="list">${g.order.map(id => `<div class="item ${g.alive[id] ? '' : 'dead'}"><span>${esc(name(id))}${id === S.myId ? ' <span class="muted small">(you)</span>' : ''}</span>
+      <span class="row" style="gap:6px">${showRolesTo(id) ? pillRole(id) : ''}${extra ? extra(id) : ''}</span></div>`).join('')}</div>`;
+  }
+
+  function viewDiscussion() {
+    const g = S.game, first = g.night === 0;
+    const ev = g.event;
+    const recap = ev && ev.type === 'banish' ? '' : '';
+    return `${topBar(first ? 'Day 1: first discussion' : `Day ${g.night}: discussion`)}${flashBox()}
+    <div class="card hero"><span class="big">${first ? 'Who seems off?' : 'Talk it through'}</span>
+      <p class="muted">${first ? 'Introduce yourselves and look for anyone acting a little robotic.' : 'Discuss who might be a Bot. When you are ready, the host opens the vote.'}</p></div>
+    ${recap}
+    ${!alive() && inGame() ? ghostPanel() : ''}
+    <div class="card"><span class="label">Players</span>${peopleList()}</div>
+    ${amHost() ? `<button class="${first ? 'danger' : 'primary'} wide" data-a="${first ? 'night' : 'vote'}">${first ? 'Night falls' : 'Open the vote'}</button>` : ''}`;
+  }
+
+  function viewNight() {
+    const g = S.game;
+    if (!inGame() || !alive()) return `${topBar(W().nightTitle)}<div class="card hero"><span class="big">${W().nightTitle}</span><p class="muted">Ghosts stay quiet while the living tap away.</p></div>${inGame() ? ghostPanel() : ''}`;
+    const list = nightList(), r = myRole(), a = myAct() || {};
+    let rows, status;
+    if (r === 'bot') {
+      const bots = Engine.livingBy(g, 'bot');
+      const picks = {}; bots.forEach(b => { const pa = b === S.myId ? myAct() : Engine.act(S.players, b, g); if (pa && pa.pick) (picks[pa.pick] = picks[pa.pick] || []).push(b); });
+      const lockedOn = Object.keys(picks).find(t => picks[t].length === bots.length);
+      const agreed = lockedOn ? bots.length : Math.max(0, ...Object.values(picks).map(x => x.length));
+      rows = list.map(id => {
+        const ally = g.roles[id] === 'bot';
+        return `<button class="item ${a.pick === id ? 'done' : picks[id] ? 'target' : ''} ${lockedOn === id ? 'locked' : ''}" data-a="pick" data-v="${esc(id)}" ${ally ? 'disabled' : ''}>
+          <span>${esc(name(id))}</span><span class="dots">${(picks[id] || []).map(b => `<i class="dot ${b === S.myId ? 'me' : ''}"></i>`).join('')}</span></button>`;
+      }).join('');
+      status = `${lockedOn ? 'Locked' : 'Agreement'} ${agreed}/${bots.length}`;
+    } else {
+      const slot = S.slotSeen, m = Engine.markerIndex(S.myId + ':' + g.night, slot, list.length);
+      const hit = !!S.hits[g.phaseId + ':' + slot];
+      rows = list.map((id, i) => `<button class="item ${i === m ? (hit ? 'done' : 'target') : ''}" data-a="decoy" data-v="${i}"><span>${esc(name(id))}</span><span class="dots">${i === m ? '<i class="dot me"></i>' : ''}</span></button>`).join('');
+      const need = Engine.taskNeedFor(S.myId + ':' + g.night, g.nightSec);
+      status = `Signal ${Math.min(a.hits || 0, need)}/${need}`;
+    }
+    return `${topBar(W().nightTitle)}
+    <div class="card"><div class="row" style="justify-content:space-between"><h2>${W().nightTitle}</h2><span class="pill mono">${status}</span></div>
+      <p class="small muted">${r === 'bot' ? W().nightBot : W().nightBobby}</p>
+      <div class="list">${rows}</div></div>
+    <p class="small muted">Keep tapping until the timer ends. Everyone's screen looks the same.</p>`;
+  }
+
+  function viewMorning() {
+    const g = S.game, ev = g.event || {}, w = W();
+    const lines = [];
+    if (ev.victim) lines.push(w.victim(esc(name(ev.victim))));
+    (ev.failed || []).forEach(id => lines.push(w.failed(esc(name(id)))));
+    if (!lines.length) lines.push(w.noVictim);
+    return `${topBar(`Morning of day ${g.night + 1}`)}
+    <div class="card hero"><span class="label">Morning</span>${lines.map(l => `<span class="big">${l}</span>`).join('')}</div>
+    <div class="card"><span class="label">Players</span>${peopleList()}</div>`;
+  }
+
+  function viewVote() {
+    const g = S.game, a = myAct() || {}, canVote = inGame() && alive();
+    const live = Engine.living(g);
+    const votesFor = {}; live.forEach(v => { const va = v === S.myId ? myAct() : Engine.act(S.players, v, g); if (va && va.vote) (votesFor[va.vote] = votesFor[va.vote] || []).push(v); });
+    const voted = Object.values(votesFor).flat().length;
+    return `${topBar(`Day ${g.night}: vote`)}${flashBox()}
+    <div class="card"><div class="row" style="justify-content:space-between"><h2>Who is a Bot?</h2><span class="pill mono">${voted}/${live.length} voted</span></div>
+      <p class="small muted">Voting is open: everyone sees who voted for whom. You can change your vote until it closes.</p>
+      <div class="list">${live.map(id => `<button class="item ${a.vote === id ? 'sel' : ''}" data-a="castVote" data-v="${esc(id)}" ${!canVote || id === S.myId ? 'disabled' : ''}>
+        <span class="stack" style="gap:2px"><span>${esc(name(id))}${id === S.myId ? ' <span class="muted small">(you)</span>' : ''}</span>
+        ${votesFor[id] ? `<span class="tally">← ${votesFor[id].map(v => esc(name(v))).join(', ')}</span>` : ''}</span>
+        <span class="mono">${votesFor[id] ? votesFor[id].length : ''}</span></button>`).join('')}</div></div>
+    ${!canVote && inGame() ? ghostPanel() : ''}`;
+  }
+
+  function viewBanish() {
+    const g = S.game, ev = g.event || {}, w = W();
+    let body;
+    if (ev.banished) body = `<span class="label">Banished</span><span class="big" style="color:var(--${ev.role === 'bot' ? 'bot' : 'bobby'})">${ev.role === 'bot' ? w.wasBot(esc(name(ev.banished))) : w.wasBobby(esc(name(ev.banished)))}</span>`;
+    else body = `<span class="label">No banishment</span><span class="big">${ev.tie ? 'A tie. Nobody leaves.' : 'Nobody got a vote.'}</span>`;
+    return `${topBar('The vote is in')}<div class="card hero">${body}</div>
+    <div class="card"><span class="label">How people voted</span><div class="list">${Object.keys(g.votes || {}).map(v => `<div class="item"><span>${esc(name(v))}</span><span class="muted">→ ${esc(name(g.votes[v]))}</span></div>`).join('') || '<p class="small muted">No votes were cast.</p>'}</div></div>`;
+  }
+
+  function ghostPanel() {
+    const g = S.game, gh = ghost(), living = Engine.living(g);
+    const nn = nextNight(), nv = nextVote();
+    const canNight = g.phase !== 'night', canVote = g.phase === 'discussion' || g.phase === 'vote';
+    return `<div class="card"><div class="row" style="justify-content:space-between"><span class="label">Ghost side game</span><span class="pill">Ghost</span></div>
+      <p class="small muted">Your guesses stay secret until the end and earn session points. Keep a straight face.</p>
+      <span class="small"><b>Back a side</b> (worth more if picked in the round you died)</span>
+      <div class="toggle"><button data-a="gSide" data-v="bobbies" aria-pressed="${gh.side === 'bobbies'}">${W().bobbies}</button><button data-a="gSide" data-v="bots" aria-pressed="${gh.side === 'bots'}">${W().bots}</button></div>
+      <span class="small"><b>Unmask the Bots</b>: tap everyone you think is a Bot</span>
+      <div class="row" style="gap:6px">${living.map(id => `<button data-a="gUnmask" data-v="${esc(id)}" aria-pressed="${(gh.unmask || []).includes(id)}" style="min-height:40px;padding:8px 12px" class="${(gh.unmask || []).includes(id) ? 'danger' : ''}">${esc(name(id))}</button>`).join('')}</div>
+      ${canNight ? `<label class="small" for="gn"><b>Call night ${nn}</b>: who will the Bots take?</label>
+      <select id="gn" data-ch="gCallNight"><option value="">No guess</option>${Engine.livingBy(g, 'bobby').concat(Engine.livingBy(g, 'bot')).sort().map(id => `<option value="${esc(id)}" ${(gh.callNight || {})[nn] === id ? 'selected' : ''}>${esc(name(id))}</option>`).join('')}</select>` : ''}
+      ${canVote ? `<label class="small" for="gv"><b>Call vote ${nv}</b>: who will be banished?</label>
+      <select id="gv" data-ch="gCallVote"><option value="">No guess</option>${living.map(id => `<option value="${esc(id)}" ${(gh.callVote || {})[nv] === id ? 'selected' : ''}>${esc(name(id))}</option>`).join('')}</select>` : ''}
+    </div>`;
+  }
+
+  function sessionTable(highlightLast) {
+    const sc = S.game.scores || {}, ids = Object.keys(sc).sort((a, b) => sc[b].total - sc[a].total);
+    if (!ids.length) return '';
+    return `<div class="card"><span class="label">Dinner leaderboard</span><table><thead><tr><th>#</th><th>Player</th>${highlightLast ? '<th class="num">This game</th>' : ''}<th class="num">Total</th></tr></thead>
+      <tbody>${ids.map((id, i) => `<tr><td class="mono">${i + 1}</td><td>${esc(sc[id].name)}${id === S.myId ? ' <span class="muted small">(you)</span>' : ''}</td>${highlightLast ? `<td class="num mono">${S.game.lastScores[id] ? '+' + S.game.lastScores[id].total : '–'}</td>` : ''}<td class="num mono"><b>${sc[id].total}</b></td></tr>`).join('')}</tbody></table></div>`;
+  }
+
+  function viewOver() {
+    const g = S.game, w = W(), mine = g.lastScores[S.myId];
+    const recap = g.order.filter(id => !g.alive[id]).map(id => {
+      const p = S.players[id] || {}, gh = p.ghost || {};
+      const bits = [];
+      if (gh.side) bits.push(`backed the ${gh.side === 'bots' ? w.bots : w.bobbies}`);
+      const correct = (gh.unmask || []).filter(x => g.roles[x] === 'bot');
+      if (correct.length) bits.push(`unmasked ${correct.map(x => esc(name(x))).join(', ')}`);
+      if (g.ghostHits[id]) bits.push(`called ${g.ghostHits[id]} event${g.ghostHits[id] > 1 ? 's' : ''} right`);
+      return bits.length ? `<li><b>${esc(name(id))}</b> ${bits.join(', ')}</li>` : '';
+    }).join('');
+    return `${topBar('Game over')}
+    <div class="card hero"><span class="label">Game ${g.gameNo}</span><span class="big" style="color:var(--${g.winner === 'bots' ? 'bot' : 'bobby'})">${g.winner === 'bots' ? w.botsWin : w.bobbiesWin}</span>
+      ${mine ? `<p>You scored <b>${mine.total}</b>${mine.parts.length ? ': ' + mine.parts.map(p => `${esc(p[0])} +${p[1]}`).join(', ') : ''}</p>` : ''}</div>
+    <div class="card"><span class="label">Everyone's role</span>${peopleList(id => `<span class="mono small">+${g.lastScores[id] ? g.lastScores[id].total : 0}</span>`)}</div>
+    ${recap ? `<div class="card"><span class="label">Ghost recap</span><ul style="margin:0;padding-left:20px">${recap}</ul></div>` : ''}
+    ${sessionTable(true)}
+    ${amHost() ? (S.confirmEnd ? `<div class="card"><p>End the dinner and show the podium?</p><div class="row"><button class="danger" data-a="endDinner">End dinner</button><button data-a="cancelEnd">Keep playing</button></div></div>`
+      : `<div class="row"><button class="primary" style="flex:1" data-a="nextGame">Next game</button><button style="flex:1" data-a="endDinner">End dinner</button></div>`) : '<p class="small muted">The host starts the next game.</p>'}`;
+  }
+
+  function viewPodium() {
+    const sc = S.game.scores || {}, ids = Object.keys(sc).sort((a, b) => sc[b].total - sc[a].total);
+    const step = (i, cls) => ids[i] ? `<div class="step ${cls}"><span class="display" style="font-size:1.6rem">${i + 1}</span><b>${esc(sc[ids[i]].name)}</b><span class="mono small">${sc[ids[i]].total} pts</span></div>` : '<div></div>';
+    return `${logo()}<div class="card hero"><span class="label">End of dinner · ${S.game.gameNo} game${S.game.gameNo > 1 ? 's' : ''}</span><span class="big">The podium</span></div>
+    <div class="podium">${step(1, 'p2')}${step(0, 'p1')}${step(2, 'p3')}</div>
+    ${sessionTable()}
+    <button class="ghostbtn" data-a="leave">Back to start</button>`;
+  }
+
+  function spectator() {
+    return `${topBar('In progress')}<div class="card hero"><span class="big">A game is running</span><p class="muted">You joined after it started. You'll be in the next game: get ready in the lobby when it opens.</p></div>`;
+  }
+
+  function deadOverlay() {
+    return `<div class="dead-screen" role="alertdialog" aria-live="assertive"><span class="big">${W().deadTitle}</span><p>${W().deadSub}</p><button data-a="closeDead" style="background:transparent;color:inherit;border-color:currentColor">Become a Ghost</button></div>`;
+  }
+
+  let lastHtml = '';
+  function render() {
+    let html;
+    if (S.screen !== 'game' || !S.game) html = viewHome();
+    else {
+      const p = S.game.phase;
+      if (p !== 'lobby' && p !== 'podium' && !inGame()) html = spectator();
+      else html = ({ lobby: viewLobby, roles: viewRoles, discussion: viewDiscussion, night: viewNight, morning: viewMorning, vote: viewVote, banish: viewBanish, over: viewOver, podium: viewPodium })[p]();
+      if (S.store && S.store.local && p !== 'lobby' && p !== 'podium') html += `<button class="ghostbtn small" data-a="peek">${S.peek ? 'Hide' : 'Show'} all roles (test only)</button><button class="ghostbtn small" data-a="leave">Quit test</button>`;
+      if (S.deadOverlay) html += deadOverlay();
+    }
+    const focus = document.activeElement && document.activeElement.id, sel = focus && document.activeElement.selectionStart;
+    if (html === lastHtml) return;
+    lastHtml = html;
+    $app.innerHTML = html;
+    if (focus) { const el = document.getElementById(focus); if (el) { el.focus(); try { if (sel != null) el.setSelectionRange(sel, sel); } catch (e) {} } }
+  }
+  return { boot, flash, render, S };
+})();
+document.body.dataset.mode = 'adult';
+App.boot();
+</script>
+</body>
+</html>
