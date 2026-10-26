@@ -96,7 +96,15 @@ input, select {
 .pill.bobby { background: color-mix(in srgb, var(--bobby) 18%, transparent); border-color: var(--bobby); }
 .pill.ok { border-color: var(--ok); color: var(--ok); }
 .list { display: flex; flex-direction: column; gap: 8px; }
-.item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); min-height: 52px; }
+.item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); min-height: 46px; min-width: 0; }
+.item .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list.tight { gap: 6px; }
+.item.done { border-color: var(--ok); box-shadow: inset 0 0 0 2px var(--ok); background: color-mix(in srgb, var(--ok) 16%, var(--surface)); }
+.item.vrow { padding: 2px 3px 2px 12px; min-height: 46px; }
+.radio { flex: none; width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 50%; border: 2px solid var(--muted); background: transparent; display: grid; place-items: center; }
+.radio::after { content: ""; width: 18px; height: 18px; border-radius: 50%; background: transparent; }
+.radio[aria-checked="true"] { border-color: var(--ok); }
+.radio[aria-checked="true"]::after { background: var(--ok); }
 .item.dead { opacity: .45; text-decoration: line-through; }
 button.item { width: 100%; text-align: left; font-weight: 700; }
 button.item.sel { border-color: var(--bobby); box-shadow: inset 0 0 0 2px var(--bobby); }
@@ -570,12 +578,20 @@ const App = (() => {
   // Each phone gets its own name order per night, so hand position at the table gives nothing away
   const nightList = () => { const seed = S.myId + ':' + S.game.night; return Engine.living(S.game).filter(id => id !== S.myId).sort((x, y) => Engine.markerIndex(seed, x, 1e9) - Engine.markerIndex(seed, y, 1e9)); };
 
-  // Game taps fire on pointerdown so a live re-render between press and release can't swallow them
-  const FAST = new Set(['pick', 'decoy', 'castVote']);
+  // Night taps are tracked from press to release: a live re-render in between can't swallow them,
+  // and a finger that moves (a scroll) or is cancelled by the browser never counts as a tap
+  const FAST = new Set(['pick', 'decoy']);
+  let press = null;
   document.addEventListener('pointerdown', e => {
-    const b = e.target.closest('[data-a]'); if (!b || b.disabled || !FAST.has(b.dataset.a)) return;
-    Sound.unlock(); e.preventDefault(); actions[b.dataset.a](b.dataset.v);
+    const b = e.target.closest('[data-a]');
+    press = b && !b.disabled && FAST.has(b.dataset.a) ? { a: b.dataset.a, v: b.dataset.v, x: e.clientX, y: e.clientY } : null;
   });
+  document.addEventListener('pointerup', e => {
+    const p = press; press = null;
+    if (!p || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 12) return;
+    Sound.unlock(); actions[p.a](p.v);
+  });
+  document.addEventListener('pointercancel', () => { press = null; });
   document.addEventListener('click', e => {
     Sound.unlock();
     const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
@@ -688,20 +704,20 @@ const App = (() => {
       rows = list.map(id => {
         const ally = g.roles[id] === 'bot';
         return `<button class="item ${a.pick === id ? 'done' : picks[id] ? 'target' : ''} ${lockedOn === id ? 'locked' : ''}" data-a="pick" data-v="${esc(id)}" ${ally ? 'disabled' : ''}>
-          <span>${esc(name(id))}</span><span class="dots">${(picks[id] || []).map(b => `<i class="dot ${b === S.myId ? 'me' : ''}"></i>`).join('')}</span></button>`;
+          <span class="nm">${esc(name(id))}</span><span class="dots">${(picks[id] || []).map(b => `<i class="dot ${b === S.myId ? 'me' : ''}"></i>`).join('')}</span></button>`;
       }).join('');
       status = `${lockedOn ? 'Locked' : 'Agreement'} ${agreed}/${bots.length}`;
     } else {
       const slot = S.slotSeen, m = Engine.markerIndex(S.myId + ':' + g.night, slot, list.length);
       const hit = !!S.hits[g.phaseId + ':' + slot];
-      rows = list.map((id, i) => `<button class="item ${i === m ? (hit ? 'done' : 'target') : ''}" data-a="decoy" data-v="${i}"><span>${esc(name(id))}</span><span class="dots">${i === m ? '<i class="dot me"></i>' : ''}</span></button>`).join('');
+      rows = list.map((id, i) => `<button class="item ${i === m ? (hit ? 'done' : 'target') : ''}" data-a="decoy" data-v="${i}"><span class="nm">${esc(name(id))}</span><span class="dots">${i === m ? '<i class="dot me"></i>' : ''}</span></button>`).join('');
       const need = Engine.taskNeedFor(S.myId + ':' + g.night, g.nightSec);
       status = `Signal ${Math.min(a.hits || 0, need)}/${need}`;
     }
     return `${topBar(W().nightTitle)}
     <div class="card"><div class="row" style="justify-content:space-between"><h2>${W().nightTitle}</h2><span class="pill mono">${status}</span></div>
       <p class="small muted">${r === 'bot' ? W().nightBot : W().nightBobby}</p>
-      <div class="list">${rows}</div></div>
+      <div class="list tight">${rows}</div></div>
     <p class="small muted">Keep tapping until the timer ends. Everyone's screen looks the same.</p>`;
   }
 
@@ -723,11 +739,11 @@ const App = (() => {
     const voted = Object.values(votesFor).flat().length;
     return `${topBar(`Day ${g.night}: vote`)}${flashBox()}
     <div class="card"><div class="row" style="justify-content:space-between"><h2>Who is a Bot?</h2><span class="pill mono">${voted}/${live.length} voted</span></div>
-      <p class="small muted">Voting is open: everyone sees who voted for whom. You can change your vote until it closes.</p>
-      <div class="list">${live.map(id => `<button class="item ${a.vote === id ? 'sel' : ''}" data-a="castVote" data-v="${esc(id)}" ${!canVote || id === S.myId ? 'disabled' : ''}>
-        <span class="stack" style="gap:2px"><span>${esc(name(id))}${id === S.myId ? ' <span class="muted small">(you)</span>' : ''}</span>
-        ${votesFor[id] ? `<span class="tally">← ${votesFor[id].map(v => esc(name(v))).join(', ')}</span>` : ''}</span>
-        <span class="mono">${votesFor[id] ? votesFor[id].length : ''}</span></button>`).join('')}</div></div>
+      <p class="small muted">Tap a circle to vote. You can change it until the vote closes.</p>
+      <div class="list tight" role="radiogroup" aria-label="Vote">${live.map(id => `<div class="item vrow ${a.vote === id ? 'done' : ''}">
+        <span class="stack nm" style="gap:0"><span class="nm">${esc(name(id))}${id === S.myId ? ' <span class="muted small">(you)</span>' : ''}</span>
+        ${votesFor[id] ? `<span class="tally nm">${votesFor[id].length} ← ${votesFor[id].map(v => esc(name(v))).join(', ')}</span>` : ''}</span>
+        ${canVote && id !== S.myId ? `<button class="radio" role="radio" aria-checked="${a.vote === id}" aria-label="Vote for ${esc(name(id))}" data-a="castVote" data-v="${esc(id)}"></button>` : ''}</div>`).join('')}</div></div>
     ${!canVote && inGame() ? ghostPanel() : ''}`;
   }
 

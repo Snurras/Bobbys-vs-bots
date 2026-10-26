@@ -51,6 +51,7 @@ Every living player sees the same kind of screen: a list of names they keep tapp
 - **Shuffled per phone:** each player gets their own name order every night, so where a thumb goes says nothing.
 - **Full timer always:** the night never ends early, so finishing fast gives nobody away.
 - **Feedback:** a name shows **red** when it is marked and **green** once you have tapped it.
+- **Scroll-safe:** a tap only counts if your finger lifts where it pressed, so scrolling the list never picks a name.
 
 **Bots** tap a name to target it. Each Bot's pick shows as a dot next to the name; your own pick turns green, other Bots' picks show red. When every living Bot has picked the same Bobby the name locks. When the timer ends, the locked name is eliminated. If the Bots never agree, nobody is eliminated. Bots cannot target other Bots.
 
@@ -68,7 +69,7 @@ The eliminated player's phone plays a sound and shows a full-screen message. Eve
 
 ## Voting and banishment
 
-Voting is open: everyone sees who voted for whom as votes come in, and a player can change their vote until the vote closes. The player with the most votes is banished and their role is revealed ("[name] was a Bot" / "[name] was a Bobby"). A tie, or no votes at all, means nobody is banished that round.
+Voting is open: everyone sees who voted for whom as votes come in. You vote by tapping the circle next to a name (tapping the name itself does nothing, so scrolling cannot cast a vote), and a player can change their vote until the vote closes. The player with the most votes is banished and their role is revealed ("[name] was a Bot" / "[name] was a Bobby"). A tie, or no votes at all, means nobody is banished that round.
 
 ## Winning
 
